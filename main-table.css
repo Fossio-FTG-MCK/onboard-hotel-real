@@ -1,0 +1,30 @@
+.main-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 24px;
+  background: #fff;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(32,50,100,.04);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.main-table thead tr {
+  background: #f2f4fa;
+}
+.main-table th,
+.main-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+}
+.main-table th {
+  font-weight: 700;
+  color: #223469;
+}
+.main-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.main-table tbody tr:hover {
+  background: #f7fafd;
+}
+

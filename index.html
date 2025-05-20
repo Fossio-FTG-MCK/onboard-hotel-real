@@ -1,0 +1,46 @@
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Hotel Real Onboard - Home</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script type="importmap">
+    {
+      "imports": {}
+    }
+  </script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidemenu">
+      <div class="sidemenu-logo">
+        <!-- Inline SVG logo -->
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <circle cx="22" cy="22" r="22" fill="#1A2950"/>
+          <text x="50%" y="56%" text-anchor="middle" fill="#fff" font-size="20" font-family="Arial" dy=".3em">HR</text>
+        </svg>
+        <span class="logo-title">Hotel Real<br/>Onboard</span>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="#/beneficios" class="active">Benefícios</a></li>
+          <li><a href="#/parceiros">Parceiros</a></li>
+          <li><a href="#/vouchers">Vouchers</a></li>
+          <li><a href="#/usuarios">Usuários</a></li>
+        </ul>
+      </nav>
+      <button class="login-menu-btn" id="openLoginModal" title="Entrar">
+        <svg width="23" height="23" viewBox="0 0 20 20" style="vertical-align:middle;">
+          <circle cx="10" cy="6.5" r="4" fill="#36a9f4"/><ellipse cx="10" cy="15.5" rx="7" ry="3.2" fill="#36a9f4" opacity=".6"/>
+        </svg>
+        <span>Entrar</span>
+      </button>
+    </aside>
+    <main class="main-content">
+      <!-- Conteúdo será preenchido pelo SPA -->
+    </main>
+  </div>
+  <div id="login-modal-root"></div>
+</body>
+</html>
