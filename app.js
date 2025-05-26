@@ -160,8 +160,7 @@ function createLoginModal(isPersistent = false) {
   const logoutBtn = overlay.querySelector('.login-link-btn[data-logout]');
   if (logoutBtn) {
     logoutBtn.onclick = () => {
-      setCurrentUser(null);
-      closeModal();
+      logout();
     };
   }
 
@@ -293,6 +292,7 @@ function enableLoginModalMenu() {
 function logout() {
   setCurrentUser(null); // Limpa o usuário atual
   closeModal(); // Fecha o modal se estiver aberto
+  openLoginModal(); // Abre o modal de login após deslogar
 }
 
 // --------- END LOGIN ---------
