@@ -4,6 +4,7 @@ const routes = {
   parceiros: () => import('./pages/Parceiros.js'),
   vouchers: () => import('./pages/Vouchers.js'),
   usuarios: () => import('./pages/Usuarios.js'),
+  addPontos: () => import('./pages/AddPontos.js'),
 };
 
 function getCurrentPageFromHash() {

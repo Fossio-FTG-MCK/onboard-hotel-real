@@ -1,5 +1,9 @@
 // pages/AddPontos.js
 
+import { useEffect, useState } from 'react';
+import { supabase } from '../supabaseClient'; // Ajuste o caminho conforme necessário
+import './AddPontos.css'; // Para estilos específicos, se necessário
+
 // Assuming supabaseClient is globally available from app.js
 // const { createClient } = supabase; // From app.js
 // const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY); // From app.js
@@ -142,204 +146,151 @@ function renderPontosTable(pontosList, editCallback, deleteCallback) {
   return tableHtml;
 }
 
-export async function render({ main }) {
-  main.innerHTML = `
-    <div class="page-header">
-      <h2>Adicionar Pontos Extras</h2>
-    </div>
-    <div class="page-content">
-      <div class="form-container" style="margin-bottom: 20px;">
-        <h3 id="formTitle">Adicionar Novo Ponto</h3>
-        <form id="addPontoForm">
-          <input type="hidden" id="editingPontoId" name="editingPontoId">
-          <div class="form-group">
-            <label for="userInput">Buscar Usuário (Nome, Email, CPF, Telefone):</label>
-            <input type="text" id="userInput" name="userInput" placeholder="Digite para buscar..." autocomplete="off" />
-            <div id="userSearchResults" class="search-results-dropdown" style="display:none;"></div>
-            <input type="hidden" id="selectedUserId" name="selectedUserId" required />
-            <p id="selectedUserInfo" style="margin-top: 5px; font-style: italic;"></p>
-          </div>
-          <div class="form-group">
-            <label for="pontosInput">Pontos:</label>
-            <input type="number" id="pontosInput" name="pontos" required min="1" />
-          </div>
-          <button type="submit" class="btn-primary" id="submitPontoBtn">Adicionar Ponto</button>
-          <button type="button" class="btn-secondary" id="cancelEditBtn" style="display:none;">Cancelar Edição</button>
-        </form>
-      </div>
-      <h3>Pontos Existentes</h3>
-      <div id="pontosListContainer">
-        <p>Carregando pontos...</p>
-      </div>
-    </div>
-  `;
+const AddPontos = () => {
+  const [pontosList, setPontosList] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [selectedUsuario, setSelectedUsuario] = useState(null);
+  const [pontos, setPontos] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentId, setCurrentId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const pontosListContainer = main.querySelector('#pontosListContainer');
-  const addPontoForm = main.querySelector('#addPontoForm');
-  const userInput = main.querySelector('#userInput');
-  const userSearchResultsContainer = main.querySelector('#userSearchResults');
-  const selectedUserIdInput = main.querySelector('#selectedUserId');
-  const selectedUserInfo = main.querySelector('#selectedUserInfo');
-  const pontosInput = main.querySelector('#pontosInput');
-  const editingPontoIdInput = main.querySelector('#editingPontoId');
-  const formTitle = main.querySelector('#formTitle');
-  const submitPontoBtn = main.querySelector('#submitPontoBtn');
-  const cancelEditBtn = main.querySelector('#cancelEditBtn');
+  const fetchPontos = async () => {
+    const { data, error } = await supabase
+      .from('add_pontos')
+      .select('*, usuarios(nome_usuario)')
+      .order('usado', { ascending: true })
+      .order('id', { ascending: true });
 
-  let searchTimeout;
+    if (error) {
+      setError('Erro ao buscar pontos');
+    } else {
+      setPontosList(data);
+    }
+    setLoading(false);
+  };
 
-  userInput.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    userSearchResultsContainer.style.display = 'none';
-    userSearchResultsContainer.innerHTML = '';
-    const searchTerm = userInput.value;
+  const fetchUsuarios = async () => {
+    const { data, error } = await supabase.from('usuarios').select('*');
+    if (error) {
+      setError('Erro ao buscar usuários');
+    } else {
+      setUsuarios(data);
+    }
+  };
 
-    if (searchTerm.length < 3) {
-      selectedUserIdInput.value = ''; // Clear selected user if search term is too short
-      selectedUserInfo.textContent = '';
+  useEffect(() => {
+    fetchPontos();
+    fetchUsuarios();
+  }, []);
+
+  const openAddModal = () => {
+    resetForm(); // Reseta o formulário antes de abrir o modal
+    setIsEditing(false); // Define que não está em modo de edição
+  };
+
+  const handleSave = async () => {
+    if (!pontos || !selectedUsuario) {
+      setError('Preencha todos os campos obrigatórios.');
       return;
     }
 
-    searchTimeout = setTimeout(async () => {
-      const users = await fetchUsuarios(searchTerm);
-      userSearchResultsContainer.innerHTML = ''; // Clear previous results
-      if (users.length > 0) {
-        const ul = document.createElement('ul');
-        users.forEach(user => {
-          const li = document.createElement('li');
-          li.textContent = `${user.nome_usuario} (${user.email || user.cpf || user.telefone})`;
-          li.dataset.userId = user.id;
-          li.dataset.userName = user.nome_usuario;
-          li.addEventListener('click', () => {
-            selectedUserIdInput.value = user.id;
-            userInput.value = `${user.nome_usuario} (${user.email || user.cpf || user.telefone})`; // Fill input for user feedback
-            selectedUserInfo.textContent = `Usuário selecionado: ${user.nome_usuario} (ID: ${user.id})`;
-            userSearchResultsContainer.style.display = 'none';
-            userSearchResultsContainer.innerHTML = '';
-          });
-          ul.appendChild(li);
-        });
-        userSearchResultsContainer.appendChild(ul);
-        userSearchResultsContainer.style.display = 'block';
+    const newPonto = { pontos: parseInt(pontos), usuario_utilizador: selectedUsuario.id };
+
+    if (isEditing) {
+      const { error } = await supabase
+        .from('add_pontos')
+        .update(newPonto)
+        .eq('id', currentId);
+      if (error) {
+        setError('Erro ao editar ponto');
       } else {
-        userSearchResultsContainer.innerHTML = '<p>Nenhum usuário encontrado.</p>';
-        userSearchResultsContainer.style.display = 'block';
+        setSuccess('Ponto editado com sucesso!');
       }
-    }, 300); // Debounce search
-  });
-  
-  // Hide search results if clicked outside
-  document.addEventListener('click', function(event) {
-    if (!userInput.contains(event.target) && !userSearchResultsContainer.contains(event.target)) {
-        userSearchResultsContainer.style.display = 'none';
+    } else {
+      const { error } = await supabase.from('add_pontos').insert([newPonto]);
+      if (error) {
+        setError('Erro ao adicionar ponto');
+      } else {
+        setSuccess('Ponto adicionado com sucesso!');
+      }
     }
-  });
 
-
-  async function loadAndRenderPontos() {
-    pontosListContainer.innerHTML = '<p>Carregando pontos...</p>';
-    const rawPontos = await fetchPontos();
-    // Map user id column back to usuario_id for consistency
-    const mappedPontos = rawPontos.map(p => ({
-      id: p.id,
-      pontos: p.pontos,
-      usuario_id: p.usuario_utilizador,
-      usuario_utilizador: p.usuario_utilizador
-    }));
-    // Get all users to map names
-    const usuariosAll = await fetchAllUsuarios();
-    const userMap = Object.fromEntries(usuariosAll.map(u => [u.id, u.nome_usuario]));
-    // Attach nome_usuario
-    const pontosComNome = mappedPontos.map(ponto => ({
-      ...ponto,
-      nome_usuario: userMap[ponto.usuario_utilizador]
-    }));
-    pontosListContainer.innerHTML = renderPontosTable(pontosComNome, handleEditPonto, handleDeletePonto);
-
-    // Add event listeners for edit and delete buttons
-    pontosListContainer.querySelectorAll('.btn-edit').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const pontoId = e.target.dataset.id;
-            const row = e.target.closest('tr');
-            const usuarioId = row.dataset.usuarioId;
-            const pontos = row.dataset.pontos;
-            const userName = row.cells[0].textContent.split(' (ID:')[0]; // Extract user name
-
-            handleEditPonto(pontoId, usuarioId, pontos, userName);
-        });
-    });
-    pontosListContainer.querySelectorAll('.btn-delete').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const pontoId = e.target.dataset.id;
-            handleDeletePonto(pontoId);
-        });
-    });
-  }
-
-  function resetForm() {
-    addPontoForm.reset();
-    selectedUserIdInput.value = '';
-    selectedUserInfo.textContent = '';
-    userInput.value = '';
-    editingPontoIdInput.value = '';
-    formTitle.textContent = 'Adicionar Novo Ponto';
-    submitPontoBtn.textContent = 'Adicionar Ponto';
-    cancelEditBtn.style.display = 'none';
-    submitPontoBtn.disabled = false;
-  }
-
-  function handleEditPonto(pontoId, usuarioId, pontos, userName) {
-    formTitle.textContent = 'Editar Ponto Extra';
-    editingPontoIdInput.value = pontoId;
-    selectedUserIdInput.value = usuarioId;
-    userInput.value = userName; // Display user name in search, not ideal but simple for now
-    selectedUserInfo.textContent = `Editando para: ${userName} (ID: ${usuarioId})`;
-    pontosInput.value = pontos;
-    submitPontoBtn.textContent = 'Salvar Alterações';
-    cancelEditBtn.style.display = 'inline-block';
-    window.scrollTo(0, 0); // Scroll to top to see the form
-  }
-
-  cancelEditBtn.addEventListener('click', () => {
+    fetchPontos();
     resetForm();
-  });
+  };
 
-  async function handleDeletePonto(pontoId) {
-    if (confirm('Tem certeza que deseja deletar este registro de pontos?')) {
-        const success = await deletePonto(pontoId);
-        if (success) {
-            await loadAndRenderPontos();
-        }
+  const resetForm = () => {
+    setPontos('');
+    setSelectedUsuario(null);
+    setIsEditing(false);
+    setCurrentId(null);
+  };
+
+  const handleEdit = (ponto) => {
+    setPontos(ponto.pontos);
+    setSelectedUsuario(usuarios.find(user => user.id === ponto.usuario_utilizador));
+    setIsEditing(true);
+    setCurrentId(ponto.id);
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm('Deseja remover?')) {
+      const { error } = await supabase.from('add_pontos').delete().eq('id', id);
+      if (error) {
+        setError('Erro ao remover ponto');
+      } else {
+        setSuccess('Ponto removido com sucesso!');
+        fetchPontos();
+      }
     }
-  }
+  };
 
-  addPontoForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const usuarioId = selectedUserIdInput.value;
-    const pontosValue = pontosInput.value;
-    const currentPontoId = editingPontoIdInput.value;
-    
-    submitPontoBtn.disabled = true;
-    submitPontoBtn.textContent = currentPontoId ? 'Salvando...' : 'Adicionando...';
+  return (
+    <div>
+      <h1>Add Pontos</h1>
+      {loading ? <p>Carregando...</p> : (
+        <div>
+          {error && <div className="error">{error}</div>}
+          {success && <div className="success">{success}</div>}
+          
+          {/* Botão para adicionar novos pontos */}
+          <button onClick={openAddModal}>Adicionar Novo Ponto</button>
 
-    let result;
-    if (currentPontoId) { // Editing existing ponto
-        result = await updatePonto(currentPontoId, usuarioId, pontosValue);
-    } else { // Adding new ponto
-        result = await addPonto(usuarioId, pontosValue);
-    }
+          <ul>
+            {pontosList.map(ponto => (
+              <li key={ponto.id}>
+                {ponto.pontos} - {ponto.usuarios.nome_usuario}
+                <button onClick={() => handleEdit(ponto)}>Editar</button>
+                <button onClick={() => handleDelete(ponto.id)}>Remover</button>
+              </li>
+            ))}
+          </ul>
 
-    if (result) {
-      resetForm();
-      await loadAndRenderPontos(); // Refresh the list
-    }
-    
-    submitPontoBtn.disabled = false;
-    // Text content will be reset by resetForm if successful, or needs to be manually set on error
-    if (!result) {
-        submitPontoBtn.textContent = currentPontoId ? 'Salvar Alterações' : 'Adicionar Ponto';
-    }
-  });
+          {/* Modal para adicionar/editar pontos */}
+          <div className="modal">
+            <h2>{isEditing ? 'Editar Ponto' : 'Adicionar Ponto'}</h2>
+            <input
+              type="number"
+              value={pontos}
+              onChange={(e) => setPontos(e.target.value)}
+              placeholder="Pontos"
+            />
+            <input
+              type="text"
+              value={selectedUsuario ? selectedUsuario.nome_usuario : ''}
+              onChange={(e) => setSelectedUsuario(e.target.value)}
+              placeholder="Buscar Usuário"
+            />
+            <button onClick={handleSave}>{isEditing ? 'Salvar Alterações' : 'Salvar'}</button>
+            <button onClick={resetForm}>Cancelar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
-  await loadAndRenderPontos(); // Initial load
-} 
+export default AddPontos; 
