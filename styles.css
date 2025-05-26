@@ -188,7 +188,8 @@ body {
   font-weight: 500;
 }
 .login-modal input[type="email"],
-.login-modal input[type="password"] {
+.login-modal input[type="password"],
+.login-modal input[type="text"] {
   padding: 11px 38px 11px 11px;
   border: 1px solid #c3d1ec;
   border-radius: 6px;
