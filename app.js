@@ -102,52 +102,59 @@ function createLoginModal(isPersistent = false) {
   const loginSuccess = overlay.querySelector('.login-success');
   let loading = false;
 
-  passRevealBtn.addEventListener('click', () => {
-    passInput.type = passInput.type === 'password' ? 'text' : 'password';
-    passRevealBtn.innerHTML = passInput.type === 'password'
-      ? `<svg xmlns="http://www.w3.org/2000/svg" height="19" width="19" viewBox="0 0 20 20"><ellipse cx="10" cy="10" rx="7" ry="5.3" fill="none" stroke="#132455" stroke-width="1.5"/><circle cx="10" cy="10" r="2.5" fill="none" stroke="#1ca6f9" stroke-width="1.4"/></svg>`
-      : `<svg xmlns="http://www.w3.org/2000/svg" height="19" width="19" viewBox="0 0 20 20"><ellipse cx="10" cy="10" rx="7" ry="5.3" fill="none" stroke="#132455" stroke-width="1.5"/><circle cx="10" cy="10" r="2.5" fill="none" stroke="#1ca6f9" stroke-width="1.4"/><line x1="5" y1="15" x2="15" y2="5" stroke="#a3b8d8" stroke-width="1.6"/></svg>`;
-  });
+  if (passRevealBtn) {
+    passRevealBtn.addEventListener('click', () => {
+      passInput.type = passInput.type === 'password' ? 'text' : 'password';
+      passRevealBtn.innerHTML = passInput.type === 'password'
+        ? `<svg xmlns="http://www.w3.org/2000/svg" height="19" width="19" viewBox="0 0 20 20"><ellipse cx="10" cy="10" rx="7" ry="5.3" fill="none" stroke="#132455" stroke-width="1.5"/><circle cx="10" cy="10" r="2.5" fill="none" stroke="#1ca6f9" stroke-width="1.4"/></svg>`
+        : `<svg xmlns="http://www.w3.org/2000/svg" height="19" width="19" viewBox="0 0 20 20"><ellipse cx="10" cy="10" rx="7" ry="5.3" fill="none" stroke="#132455" stroke-width="1.5"/><circle cx="10" cy="10" r="2.5" fill="none" stroke="#1ca6f9" stroke-width="1.4"/><line x1="5" y1="15" x2="15" y2="5" stroke="#a3b8d8" stroke-width="1.6"/></svg>`;
+    });
+  }
 
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    loginError.style.display = 'none';
-    loginSuccess.style.display = 'none';
-    if (loading) return;
-    loading = true;
-    overlay.querySelector('button[type="submit"]').disabled = true;
+  if (form) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      loginError.style.display = 'none';
+      loginSuccess.style.display = 'none';
+      if (loading) return;
+      loading = true;
+      overlay.querySelector('button[type="submit"]').disabled = true;
 
-    const email = emailInput.value;
-    const pass = passInput.value;
+      const email = emailInput.value;
+      const pass = passInput.value;
 
-    if (!email || !pass) {
-      loginError.textContent = 'E-mail e senha obrigatórios.';
-      loginError.style.display = '';
+      if (!email || !pass) {
+        loginError.textContent = 'E-mail e senha obrigatórios.';
+        loginError.style.display = '';
+        loading = false;
+        overlay.querySelector('button[type="submit"]').disabled = false;
+        return;
+      }
+
+      try {
+        const resp = await supaSignIn(email, pass);
+        setCurrentUser({ email, session: resp });
+        loginSuccess.textContent = "Login realizado!";
+        loginSuccess.style.display = '';
+        setTimeout(() => {
+          closeModal();
+        }, 1100);
+      } catch (err) {
+        loginError.textContent = err.message || "Não foi possível efetuar login.";
+        loginError.style.display = '';
+      }
       loading = false;
       overlay.querySelector('button[type="submit"]').disabled = false;
-      return;
-    }
-
-    try {
-      const resp = await supaSignIn(email, pass);
-      setCurrentUser({ email, session: resp });
-      loginSuccess.textContent = "Login realizado!";
-      loginSuccess.style.display = '';
-      setTimeout(() => {
-        closeModal();
-      }, 1100);
-    } catch (err) {
-      loginError.textContent = err.message || "Não foi possível efetuar login.";
-      loginError.style.display = '';
-    }
-    loading = false;
-    overlay.querySelector('button[type="submit"]').disabled = false;
-  };
+    };
+  }
 
   // Redefinir senha link - agora abre um modal próprio via JS (não usa prompt)
-  overlay.querySelector('.login-link-btn[data-reset]').onclick = () => {
-    openPasswordResetModal(emailInput.value);
-  };
+  const resetBtn = overlay.querySelector('.login-link-btn[data-reset]');
+  if (resetBtn) {
+    resetBtn.onclick = () => {
+      openPasswordResetModal(emailInput.value);
+    };
+  }
 
   // Logout
   const logoutBtn = overlay.querySelector('.login-link-btn[data-logout]');
@@ -282,6 +289,12 @@ function enableLoginModalMenu() {
   });
 }
 
+// Adicione esta função para deslogar o usuário
+function logout() {
+  setCurrentUser(null); // Limpa o usuário atual
+  closeModal(); // Fecha o modal se estiver aberto
+}
+
 // --------- END LOGIN ---------
 
 export async function loadPage(page) {
@@ -335,6 +348,15 @@ window.addEventListener('DOMContentLoaded', () => {
   // Verifica se o usuário está logado e abre o modal se não estiver
   if (!CURRENT_USER) {
     openLoginModal(); // Abre o modal de login se o usuário não estiver logado
+  }
+
+  // Adiciona o listener para o botão de logout aqui
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      logout(); // Chama a função de logout
+    });
   }
 });
 
