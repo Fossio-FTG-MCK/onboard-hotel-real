@@ -91,6 +91,21 @@ body {
   color: #eaeaea;
 }
 
+.sidemenu a.logout-btn {
+  display: block;
+  padding: 14px 30px;
+  color: var(--sidemenu-text);
+  text-decoration: none;
+  font-size: 1.03rem;
+  border-left: 4px solid transparent;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidemenu a.logout-btn:hover {
+  background: var(--sidemenu-hover);
+  color: #eaeaea;
+}
+
 .login-menu-btn {
   margin-top: 16px;
   margin-left: 22px;
@@ -127,11 +142,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* fallback para mobile: scroll modal dentro da tela se necessário */
-  overflow-y: auto;
 }
 
 .login-modal {
+  z-index: 1001;
   background: #fff;
   border-radius: 18px;
   min-width: 310px;
@@ -142,8 +156,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  /* centro de tela mobile: sempre margin auto */
-  margin: 6vw 2vw;
 }
 
 .login-modal h2 {
@@ -310,3 +322,95 @@ body {
 }
 
 @import url('main-table.css');
+
+.blurred {
+  filter: blur(5px);
+  transition: filter 0.3s ease;
+}
+
+/* Styles for user search results dropdown */
+.search-results-dropdown {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  max-height: 150px;
+  overflow-y: auto;
+  width: calc(100% - 2px); /* Match input width, considering border */
+  z-index: 1001; /* Ensure it's above other elements */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.search-results-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search-results-dropdown li {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.search-results-dropdown li:last-child {
+  border-bottom: none;
+}
+
+.search-results-dropdown li:hover {
+  background-color: #f0f0f0;
+}
+
+.form-group {
+  position: relative; /* Needed for absolute positioning of the dropdown */
+  margin-bottom: 15px; /* Add some space between form groups */
+}
+
+/* Adjust button styling for consistency */
+.btn-primary,
+.btn-secondary,
+.btn-edit,
+.btn-delete {
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  margin-right: 5px; /* Spacing between buttons */
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+.btn-primary:hover {
+  background-color: #2699e9;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-edit {
+  background-color: #ffc107; /* Yellow */
+  color: #212529;
+  border-color: #ffc107;
+}
+.btn-edit:hover {
+  background-color: #e0a800;
+  border-color: #d39e00;
+}
+
+.btn-delete {
+  background-color: #dc3545; /* Red */
+  color: white;
+  border-color: #dc3545;
+}
+.btn-delete:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}

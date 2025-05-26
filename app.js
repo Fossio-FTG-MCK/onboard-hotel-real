@@ -79,17 +79,19 @@ async function supaPasswordReset(email) {
 }
 
 // Modal logic
-function createLoginModal() {
+function createLoginModal(isPersistent = false) {
   const modalRoot = document.getElementById('login-modal-root');
   if (!modalRoot) return;
   modalRoot.innerHTML = ''; // remove previous (safety)
   const overlay = document.createElement('div');
   overlay.className = 'login-modal-overlay';
-  overlay.innerHTML = getLoginModalHtml();
+  overlay.innerHTML = getLoginModalHtml(isPersistent);
   modalRoot.appendChild(overlay);
 
-  // Close modal
-  overlay.querySelector(".login-close-btn").onclick = () => closeModal();
+  // Close modal only if not persistent
+  if (!isPersistent) {
+    overlay.querySelector(".login-close-btn").onclick = () => closeModal();
+  }
 
   // Form logic
   const form = overlay.querySelector('form');
@@ -221,11 +223,12 @@ function openPasswordResetModal(prefilledEmail = "") {
   }, 120);
 }
 
-function getLoginModalHtml() {
+function getLoginModalHtml(isPersistent) {
+  const closeButton = isPersistent ? '' : '<button class="login-close-btn" title="Fechar">&times;</button>';
   if (CURRENT_USER)
     return `
       <div class="login-modal">
-        <button class="login-close-btn" title="Fechar">&times;</button>
+        ${closeButton}
         <h2>Bem-vindo!</h2>
         <div class="login-success" style="display:block;">Login realizado como <b>${CURRENT_USER.email}</b></div>
         <div class="login-links" style="margin: 0;">
@@ -235,7 +238,7 @@ function getLoginModalHtml() {
     `;
   return `
     <div class="login-modal">
-      <button class="login-close-btn" title="Fechar">&times;</button>
+      ${closeButton}
       <h2>Entrar</h2>
       <form autocomplete="on">
         <div class="login-error" style="display:none;"></div>
@@ -258,16 +261,24 @@ function getLoginModalHtml() {
   `;
 }
 
+function openLoginModal() {
+  createLoginModal(true); // Passa true para tornar o modal persistente
+  const layoutEl = document.querySelector('.layout');
+  if (layoutEl) layoutEl.classList.add('blurred'); // Adiciona a classe de desfoque ao layout
+}
+
 function closeModal() {
   const modalRoot = document.getElementById('login-modal-root');
   if (modalRoot) modalRoot.innerHTML = '';
+  const layoutEl = document.querySelector('.layout');
+  if (layoutEl) layoutEl.classList.remove('blurred'); // Remove o desfoque do layout
 }
 
 function enableLoginModalMenu() {
   // Adiciona listener ao botão menu de login
   document.getElementById('openLoginModal')?.addEventListener('click', (e) => {
     e.preventDefault();
-    createLoginModal();
+    openLoginModal();
   });
 }
 
@@ -320,7 +331,11 @@ window.addEventListener('DOMContentLoaded', () => {
   enableSpaLinks();
   onNavigate();
   enableLoginModalMenu();
-  setCurrentUser(null); // estado inicial: não logado
+  
+  // Verifica se o usuário está logado e abre o modal se não estiver
+  if (!CURRENT_USER) {
+    openLoginModal(); // Abre o modal de login se o usuário não estiver logado
+  }
 });
 
 window.addEventListener('hashchange', onNavigate);
