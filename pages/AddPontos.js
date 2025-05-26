@@ -1,296 +1,217 @@
+
 // pages/AddPontos.js
 
-import { useEffect, useState } from 'react';
-import { supabase } from '../supabaseClient'; // Ajuste o caminho conforme necessário
-import './AddPontos.css'; // Para estilos específicos, se necessário
-
-// Assuming supabaseClient is globally available from app.js
-// const { createClient } = supabase; // From app.js
-// const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY); // From app.js
-
-async function fetchUsuarios(searchTerm) {
-  if (!searchTerm || searchTerm.trim().length < 3) {
-    return []; // Avoid searching for very short terms
-  }
-  const { data, error } = await supabaseClient
-    .from('usuarios')
-    .select('id, nome_usuario, email, cpf, telefone')
-    .or(`nome_usuario.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%,telefone.ilike.%${searchTerm}%`)
-    .limit(10);
-
-  if (error) {
-    console.error('Erro ao buscar usuários:', error);
-    return [];
-  }
-  return data;
-}
-
-// New helper to fetch all users for name mapping
-async function fetchAllUsuarios() {
-  const { data, error } = await supabaseClient
-    .from('usuarios')
-    .select('id, nome_usuario');
-  if (error) {
-    console.error('Erro ao buscar todos usuários:', error);
-    return [];
-  }
-  return data;
-}
+const supabaseUrl = 'https://kpjwznuthdnodfqgnidk.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwand6bnV0aGRub2RmcWduaWRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4MDcxMjcsImV4cCI6MjA1OTM4MzEyN30.8rtnknzowlYM393S_awylDyKHBG9P3cI2VrKgQwxqNU';
 
 async function fetchPontos() {
-  const { data, error } = await supabaseClient
-    .from('add_pontos')
-    .select('id, pontos, usuario_utilizador')
-    .order('pontos', { ascending: false });
-
-  if (error) {
-    console.error('Erro ao buscar pontos extras:', error);
-    return [];
-  }
-  return data;
-}
-
-async function addPonto(usuarioId, pontosValue) {
-  if (!usuarioId) {
-    alert('Por favor, selecione um usuário.');
-    return null;
-  }
-  if (isNaN(parseInt(pontosValue, 10)) || parseInt(pontosValue, 10) <= 0) {
-    alert('Por favor, insira um valor de pontos válido.');
-    return null;
-  }
-
-  const { error } = await supabaseClient
-    .from('add_pontos')
-    .insert([{ usuario_utilizador: usuarioId, pontos: parseInt(pontosValue, 10) }]);
-
-  if (error) {
-    console.error('Erro ao adicionar ponto extra:', error);
-    alert('Erro ao adicionar ponto extra: ' + error.message);
-    return null;
-  }
-  return true;
-}
-
-// Function to delete a "ponto extra" entry
-async function deletePonto(pontoId) {
-  const { error } = await supabaseClient
-    .from('add_pontos')
-    .delete()
-    .match({ id: pontoId });
-
-  if (error) {
-    console.error('Erro ao deletar ponto extra:', error);
-    alert('Erro ao deletar ponto extra: ' + error.message);
-    return false;
-  }
-  return true;
-}
-
-// Function to update a "ponto extra" entry
-async function updatePonto(pontoId, usuarioId, pontosValue) {
-  if (!usuarioId) {
-    alert('Por favor, selecione um usuário para atualizar.');
-    return null;
-  }
-  if (isNaN(parseInt(pontosValue, 10)) || parseInt(pontosValue, 10) <= 0) {
-    alert('Por favor, insira um valor de pontos válido para atualizar.');
-    return null;
-  }
-
-  const { error } = await supabaseClient
-    .from('add_pontos')
-    .update({ usuario_utilizador: usuarioId, pontos: parseInt(pontosValue, 10) })
-    .match({ id: pontoId });
-
-  if (error) {
-    console.error('Erro ao atualizar ponto extra:', error);
-    alert('Erro ao atualizar ponto extra: ' + error.message);
-    return null;
-  }
-  return true;
-}
-
-function renderPontosTable(pontosList, editCallback, deleteCallback) {
-  if (!pontosList || pontosList.length === 0) {
-    return '<p>Nenhum ponto extra encontrado.</p>';
-  }
-  let tableHtml = `
-    <table class="main-table">
-      <thead>
-        <tr>
-          <th>Usuário</th>
-          <th>Pontos</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-  pontosList.forEach(ponto => {
-    const usuarioNome = ponto.nome_usuario || 'Usuário não encontrado';
-    tableHtml += `
-      <tr data-id="${ponto.id}" data-usuario-id="${ponto.usuario_utilizador || ponto.usuario_id}" data-pontos="${ponto.pontos}">
-        <td>${usuarioNome} (ID: ${ponto.usuario_id || ponto.usuario_utilizador})</td>
-        <td>${ponto.pontos}</td>
-        <td>
-          <button class="btn-edit" data-id="${ponto.id}">Editar</button>
-          <button class="btn-delete" data-id="${ponto.id}">Deletar</button>
-        </td>
-      </tr>
-    `;
+  const resp = await fetch(`${supabaseUrl}/rest/v1/add_pontos?select=*,usuarios(id,nome_usuario,email,telefone)&order=usado.asc,id.asc`, {
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      Accept: 'application/json'
+    }
   });
-  tableHtml += `
-      </tbody>
-    </table>
-  `;
-  return tableHtml;
+  if (!resp.ok) throw new Error('Erro ao buscar pontos');
+  return resp.json();
 }
 
-const AddPontos = () => {
-  const [pontosList, setPontosList] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
-  const [selectedUsuario, setSelectedUsuario] = useState(null);
-  const [pontos, setPontos] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentId, setCurrentId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  const fetchPontos = async () => {
-    const { data, error } = await supabase
-      .from('add_pontos')
-      .select('*, usuarios(nome_usuario)')
-      .order('usado', { ascending: true })
-      .order('id', { ascending: true });
-
-    if (error) {
-      setError('Erro ao buscar pontos');
-    } else {
-      setPontosList(data);
+async function fetchUsuariosLike(term) {
+  const query = encodeURIComponent(term);
+  const resp = await fetch(`${supabaseUrl}/rest/v1/usuarios?select=id,nome_usuario,email,telefone&or=(nome_usuario.ilike.*${query}*,email.ilike.*${query}*,telefone.ilike.*${query}*)&limit=10`, {
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`
     }
-    setLoading(false);
-  };
+  });
+  if (!resp.ok) return [];
+  return resp.json();
+}
 
-  const fetchUsuarios = async () => {
-    const { data, error } = await supabase.from('usuarios').select('*');
-    if (error) {
-      setError('Erro ao buscar usuários');
-    } else {
-      setUsuarios(data);
+async function insertPonto(data) {
+  const resp = await fetch(`${supabaseUrl}/rest/v1/add_pontos`, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!resp.ok) throw new Error('Erro ao adicionar ponto');
+  return (await resp.json())[0];
+}
+
+async function updatePonto(id, data) {
+  const resp = await fetch(`${supabaseUrl}/rest/v1/add_pontos?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!resp.ok) throw new Error('Erro ao atualizar ponto');
+  return (await resp.json())[0];
+}
+
+async function deletePonto(id) {
+  const resp = await fetch(`${supabaseUrl}/rest/v1/add_pontos?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`
     }
-  };
+  });
+  if (!resp.ok) throw new Error('Erro ao remover ponto');
+  return true;
+}
 
-  useEffect(() => {
-    fetchPontos();
-    fetchUsuarios();
-  }, []);
+export async function render({ main }) {
+  if (!main) main = document.querySelector('.main-content');
+  main.innerHTML = `
+    <div class="top-bar">
+      <h1>Adicionar Pontos</h1>
+      <button id="btnAddPonto" class="btn-add-beneficio">+ Adicionar</button>
+    </div>
+    <div class="beneficios-tablebox">
+      <table class="main-table beneficios-table">
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Email</th>
+            <th>Pontos</th>
+            <th>Usado</th>
+            <th class="actions-cell"></th>
+          </tr>
+        </thead>
+        <tbody id="pontos-table-body">
+          <tr><td colspan="5">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="ponto-modal-root"></div>
+  `;
 
-  const openAddModal = () => {
-    resetForm(); // Reseta o formulário antes de abrir o modal
-    setIsEditing(false); // Define que não está em modo de edição
-  };
+  const root = document.getElementById('ponto-modal-root');
+  const btnAdd = main.querySelector('#btnAddPonto');
 
-  const handleSave = async () => {
-    if (!pontos || !selectedUsuario) {
-      setError('Preencha todos os campos obrigatórios.');
-      return;
+  async function load() {
+    const body = main.querySelector('#pontos-table-body');
+    body.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+    try {
+      const list = await fetchPontos();
+      body.innerHTML = list.map(p => `
+        <tr>
+          <td>${p.usuarios?.nome_usuario || '-'}</td>
+          <td>${p.usuarios?.email || '-'}</td>
+          <td>${p.pontos}</td>
+          <td>${p.usado ? '✅' : '❌'}</td>
+          <td class="actions-cell">
+            <button class="action-edit-btn" data-id="${p.id}">✏️</button>
+          </td>
+        </tr>
+      `).join('');
+
+      body.querySelectorAll('.action-edit-btn').forEach(btn => {
+        btn.onclick = () => openModal({ pontoId: btn.dataset.id, onDone: load });
+      });
+
+    } catch (e) {
+      body.innerHTML = '<tr><td colspan="5" style="color:red;">Erro ao carregar</td></tr>';
+    }
+  }
+
+  btnAdd.onclick = () => openModal({ onDone: load });
+
+  async function openModal({ pontoId = null, onDone }) {
+    let ponto = null;
+    if (pontoId) {
+      const list = await fetchPontos();
+      ponto = list.find(p => p.id === pontoId);
     }
 
-    const newPonto = { pontos: parseInt(pontos), usuario_utilizador: selectedUsuario.id };
-
-    if (isEditing) {
-      const { error } = await supabase
-        .from('add_pontos')
-        .update(newPonto)
-        .eq('id', currentId);
-      if (error) {
-        setError('Erro ao editar ponto');
-      } else {
-        setSuccess('Ponto editado com sucesso!');
-      }
-    } else {
-      const { error } = await supabase.from('add_pontos').insert([newPonto]);
-      if (error) {
-        setError('Erro ao adicionar ponto');
-      } else {
-        setSuccess('Ponto adicionado com sucesso!');
-      }
-    }
-
-    fetchPontos();
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setPontos('');
-    setSelectedUsuario(null);
-    setIsEditing(false);
-    setCurrentId(null);
-  };
-
-  const handleEdit = (ponto) => {
-    setPontos(ponto.pontos);
-    setSelectedUsuario(usuarios.find(user => user.id === ponto.usuario_utilizador));
-    setIsEditing(true);
-    setCurrentId(ponto.id);
-  };
-
-  const handleDelete = async (id) => {
-    if (confirm('Deseja remover?')) {
-      const { error } = await supabase.from('add_pontos').delete().eq('id', id);
-      if (error) {
-        setError('Erro ao remover ponto');
-      } else {
-        setSuccess('Ponto removido com sucesso!');
-        fetchPontos();
-      }
-    }
-  };
-
-  return (
-    <div>
-      <h1>Add Pontos</h1>
-      {loading ? <p>Carregando...</p> : (
-        <div>
-          {error && <div className="error">{error}</div>}
-          {success && <div className="success">{success}</div>}
-          
-          {/* Botão para adicionar novos pontos */}
-          <button onClick={openAddModal}>Adicionar Novo Ponto</button>
-
-          <ul>
-            {pontosList.map(ponto => (
-              <li key={ponto.id}>
-                {ponto.pontos} - {ponto.usuarios.nome_usuario}
-                <button onClick={() => handleEdit(ponto)}>Editar</button>
-                <button onClick={() => handleDelete(ponto.id)}>Remover</button>
-              </li>
-            ))}
-          </ul>
-
-          {/* Modal para adicionar/editar pontos */}
-          <div className="modal">
-            <h2>{isEditing ? 'Editar Ponto' : 'Adicionar Ponto'}</h2>
-            <input
-              type="number"
-              value={pontos}
-              onChange={(e) => setPontos(e.target.value)}
-              placeholder="Pontos"
-            />
-            <input
-              type="text"
-              value={selectedUsuario ? selectedUsuario.nome_usuario : ''}
-              onChange={(e) => setSelectedUsuario(e.target.value)}
-              placeholder="Buscar Usuário"
-            />
-            <button onClick={handleSave}>{isEditing ? 'Salvar Alterações' : 'Salvar'}</button>
-            <button onClick={resetForm}>Cancelar</button>
+    const usuarioNome = ponto?.usuarios?.nome_usuario || '';
+    const html = `
+      <div class="login-modal-overlay">
+        <div class="login-modal">
+          <button class="login-close-btn" title="Fechar" id="closePontoModal">&times;</button>
+          <h2>${ponto ? 'Editar' : 'Adicionar'} Ponto</h2>
+          <div class="form-group">
+            <label>Pontos</label>
+            <input id="inputPontos" type="number" min="1" value="${ponto?.pontos || ''}" />
+          </div>
+          <div class="form-group">
+            <label>Usuário (busca)</label>
+            <input id="inputUsuario" type="text" placeholder="Nome, email ou telefone" value="${usuarioNome}" />
+            <div class="search-results-dropdown" id="searchDropdown" style="display:none;"></div>
+          </div>
+          <div class="drawer-actions">
+            <button id="savePontoBtn" class="btn-save">Salvar</button>
           </div>
         </div>
-      )}
-    </div>
-  );
-};
+      </div>
+    `;
 
-export default AddPontos; 
+    root.innerHTML = html;
+
+    const el = root.querySelector('.login-modal-overlay');
+    const close = el.querySelector('#closePontoModal');
+    const inputUsuario = el.querySelector('#inputUsuario');
+    const inputPontos = el.querySelector('#inputPontos');
+    const dropdown = el.querySelector('#searchDropdown');
+    const btnSave = el.querySelector('#savePontoBtn');
+
+    let selectedUserId = ponto?.usuario_utilizador || null;
+
+    close.onclick = () => (root.innerHTML = '');
+
+    inputUsuario.oninput = async () => {
+      const term = inputUsuario.value.trim();
+      if (term.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      const results = await fetchUsuariosLike(term);
+      if (!results.length) {
+        dropdown.innerHTML = '<ul><li>Nenhum resultado</li></ul>';
+        dropdown.style.display = 'block';
+        return;
+      }
+      dropdown.innerHTML = '<ul>' + results.map(u => `<li data-id="${u.id}">${u.nome_usuario} - ${u.email}</li>`).join('') + '</ul>';
+      dropdown.style.display = 'block';
+      dropdown.querySelectorAll('li').forEach(li => {
+        li.onclick = () => {
+          selectedUserId = li.dataset.id;
+          inputUsuario.value = li.textContent;
+          dropdown.style.display = 'none';
+        };
+      });
+    };
+
+    btnSave.onclick = async () => {
+      const pontos = parseInt(inputPontos.value.trim());
+      if (!selectedUserId || isNaN(pontos) || pontos <= 0) {
+        alert('Preencha os campos corretamente.');
+        return;
+      }
+
+      try {
+        if (pontoId) {
+          await updatePonto(pontoId, { usuario_utilizador: selectedUserId, pontos });
+        } else {
+          await insertPonto({ usuario_utilizador: selectedUserId, pontos });
+        }
+        root.innerHTML = '';
+        onDone && onDone();
+      } catch (e) {
+        alert(e.message || 'Erro ao salvar.');
+      }
+    };
+  }
+
+  load();
+}
