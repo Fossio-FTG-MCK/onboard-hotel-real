@@ -131,7 +131,7 @@ export async function render({ main }) {
   main.innerHTML = `
     <div class="top-bar">
       <h1>Pontuação Extra</h1>
-      <button id="btnAddPonto" class="btn-add-beneficio">+ Adicionar</button>
+      <button id="btnAddPonto" class="btn-add-beneficio-pontos">+ Adicionar</button>
     </div>
     <div class="beneficios-tablebox">
       <table class="main-table beneficios-table">
