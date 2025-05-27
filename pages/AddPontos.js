@@ -7,7 +7,7 @@ async function fetchPontos() {
   const resp = await fetch(`${supabaseUrl}/rest/v1/add_pontos?select=*,usuario:usuario_utilizador(id,nome_usuario)&order=usado.asc,id.asc`, {
     headers: {
       apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
+      Authorization: `Bearer ${window.CURRENT_USER?.session?.access_token}`,
       Accept: 'application/json'
     }
   });
@@ -17,7 +17,7 @@ async function fetchPontos() {
 
 async function fetchUsuariosLike(term) {
   const query = encodeURIComponent(term);
-  const resp = await fetch(`${supabaseUrl}/rest/v1/usuarios?select=id,nome_usuario&or=(nome_usuario.ilike.*${query}*,email.ilike.*${query}*)&limit=10`, {
+  const resp = await fetch(`${supabaseUrl}/rest/v1/v_usuarios_filtrados?select=id,nome_usuario&or=(nome_usuario.ilike.*${query}*,email.ilike.*${query}*,telefone.ilike.*${query}*,cpf.ilike.*${query}*)&limit=10`, {
     headers: {
       apikey: supabaseKey,
       Authorization: `Bearer ${supabaseKey}`
@@ -139,12 +139,12 @@ export async function render({ main }) {
               />
             </div>
             <div class="form-group">
-              <label for="inputUsuario">Usuário (busca por nome ou email)</label>
+              <label for="inputUsuario">Usuário (busca por nome, email, telefone ou CPF)</label>
               <input 
                 id="inputUsuario" 
                 name="usuario"
                 type="text" 
-                placeholder="Digite nome ou email" 
+                placeholder="Digite nome, email, telefone ou CPF" 
                 value="${ponto?.usuario?.nome_usuario || ''}" 
                 required
               />
