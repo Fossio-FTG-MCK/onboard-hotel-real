@@ -415,3 +415,181 @@ body {
   background-color: #c82333;
   border-color: #bd2130;
 }
+
+.drawer-actions {
+  display: flex;
+  justify-content: space-between; /* Alinha os botões nas extremidades */
+  margin-top: 20px; /* Adiciona espaço acima dos botões */
+}
+
+.btn-delete,
+.btn-save {
+  min-width: 140px; /* Largura mínima dos botões */
+  padding: 10px; /* Padding para os botões */
+  border-radius: 6px; /* Bordas arredondadas */
+  cursor: pointer; /* Cursor de ponteiro */
+}
+
+.btn-delete {
+  background-color: #dc3545; /* Cor de fundo para o botão de excluir */
+  color: white; /* Cor do texto */
+  border: none; /* Sem borda */
+}
+
+.btn-delete:hover {
+  background-color: #c82333; /* Cor ao passar o mouse */
+}
+
+.btn-save {
+  background-color: var(--primary); /* Cor de fundo para o botão de salvar */
+  color: white; /* Cor do texto */
+  border: none; /* Sem borda */
+}
+
+.btn-save:hover {
+  background-color: #2699e9; /* Cor ao passar o mouse */
+}
+
+.input-pontos {
+  padding: 11px 38px 11px 11px; /* Ajuste de padding para ficar consistente */
+  border: 1px solid #c3d1ec; /* Borda padrão */
+  border-radius: 6px; /* Bordas arredondadas */
+  font-size: 1rem; /* Tamanho da fonte */
+  width: 100%; /* Largura total */
+  background: #f7fafd; /* Fundo padrão */
+}
+
+.confirmation-modal-overlay {
+  z-index: 1000;
+  position: fixed;
+  left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(14, 25, 61, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirmation-modal {
+  z-index: 1001;
+  background: #fff;
+  border-radius: 18px;
+  min-width: 310px;
+  max-width: 96vw;
+  box-shadow: 0 13px 32px rgba(32, 50, 100, .13);
+  padding: 30px 28px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.confirmation-modal h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.21rem;
+  color: #1A2950;
+  text-align: left;
+  font-weight: 600;
+}
+
+.confirmation-modal p {
+  font-size: 1rem;
+  color: #191919;
+}
+
+.confirmation-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.btn-confirm,
+.btn-cancel {
+  min-width: 100px; /* Largura mínima dos botões */
+  padding: 10px; /* Padding para os botões */
+  border-radius: 6px; /* Bordas arredondadas */
+  cursor: pointer; /* Cursor de ponteiro */
+}
+
+.btn-confirm {
+  background-color: var(--primary); /* Cor de fundo para o botão de confirmar */
+  color: white; /* Cor do texto */
+  border: none; /* Sem borda */
+}
+
+.btn-confirm:hover {
+  background-color: #2699e9; /* Cor ao passar o mouse */
+}
+
+.btn-cancel {
+  background-color: #dc3545; /* Cor de fundo para o botão de cancelar */
+  color: white; /* Cor do texto */
+  border: none; /* Sem borda */
+}
+
+.btn-cancel:hover {
+  background-color: #c82333; /* Cor ao passar o mouse */
+}
+
+.notification-modal-overlay {
+  z-index: 1000;
+  position: fixed;
+  left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(14, 25, 61, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-modal {
+  z-index: 1001;
+  background: #fff;
+  border-radius: 18px;
+  min-width: 310px;
+  max-width: 96vw;
+  box-shadow: 0 13px 32px rgba(32, 50, 100, .13);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-modal.success {
+  border-left: 5px solid #28a745; /* Verde para sucesso */
+}
+
+.notification-modal.error {
+  border-left: 5px solid #dc3545; /* Vermelho para erro */
+}
+
+.notification-modal p {
+  font-size: 1rem;
+  color: #191919;
+  text-align: center;
+}
+
+.btn-close {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.btn-close:hover {
+  background-color: #2699e9; /* Cor ao passar o mouse */
+}
+
+.btn-add-beneficio {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-left: auto; /* Alinha o botão à direita */
+}
+
+.btn-add-beneficio:hover {
+  background-color: #2699e9; /* Cor ao passar o mouse */
+}

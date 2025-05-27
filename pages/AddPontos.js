@@ -57,6 +57,75 @@ async function updatePonto(id, data) {
   return (await resp.json())[0];
 }
 
+async function deletePonto(id) {
+  const resp = await fetch(`${supabaseUrl}/rest/v1/add_pontos?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${window.CURRENT_USER?.session?.access_token}`,
+      'Content-Type': 'application/json',
+    }
+  });
+  
+  if (!resp.ok) throw new Error('Erro ao excluir ponto');
+
+  // Não tenta analisar a resposta como JSON, pois pode não haver corpo
+  return resp.status === 204; // Retorna true se a exclusão foi bem-sucedida
+}
+
+async function openConfirmationModal(message, onConfirm) {
+  const confirmationHtml = `
+    <div class="confirmation-modal-overlay">
+      <div class="confirmation-modal">
+        <h2>Confirmação</h2>
+        <p>${message}</p>
+        <div class="confirmation-actions">
+          <button id="confirmBtn" class="btn-confirm">Confirmar</button>
+          <button id="cancelBtn" class="btn-cancel">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', confirmationHtml);
+
+  const confirmBtn = document.getElementById('confirmBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+
+  confirmBtn.onclick = () => {
+    onConfirm();
+    closeConfirmationModal();
+  };
+
+  cancelBtn.onclick = closeConfirmationModal;
+
+  function closeConfirmationModal() {
+    const overlay = document.querySelector('.confirmation-modal-overlay');
+    if (overlay) overlay.remove();
+  }
+}
+
+async function openNotificationModal(message, isSuccess) {
+  const notificationHtml = `
+    <div class="notification-modal-overlay">
+      <div class="notification-modal ${isSuccess ? 'success' : 'error'}">
+        <p>${message}</p>
+        <button id="closeNotificationBtn" class="btn-close">Fechar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', notificationHtml);
+
+  const closeBtn = document.getElementById('closeNotificationBtn');
+  closeBtn.onclick = closeNotificationModal;
+
+  function closeNotificationModal() {
+    const overlay = document.querySelector('.notification-modal-overlay');
+    if (overlay) overlay.remove();
+  }
+}
+
 export async function render({ main }) {
   if (!main) main = document.querySelector('.main-content');
   main.innerHTML = `
@@ -136,6 +205,7 @@ export async function render({ main }) {
                 min="1" 
                 value="${ponto?.pontos || ''}" 
                 required
+                class="input-pontos"
               />
             </div>
             <div class="form-group">
@@ -151,6 +221,7 @@ export async function render({ main }) {
               <div class="search-results-dropdown" id="searchDropdown" style="display:none;"></div>
             </div>
             <div class="drawer-actions">
+              <button type="button" class="btn-delete" id="deletePontoBtn">Excluir</button>
               <button type="submit" id="savePontoBtn" class="btn-save">Salvar</button>
             </div>
           </form>
@@ -240,6 +311,23 @@ export async function render({ main }) {
       } catch (e) {
         alert(e.message || 'Erro ao salvar.');
       }
+    };
+
+    // Adicionando o evento de clique para o botão de excluir
+    const deleteBtn = el.querySelector('#deletePontoBtn');
+    deleteBtn.onclick = () => {
+      openConfirmationModal('Tem certeza que deseja excluir este ponto?', async () => {
+        try {
+          const success = await deletePonto(pontoId); // Chama a função de exclusão
+          if (success) {
+            openNotificationModal('Ponto excluído com sucesso!', true); // Mensagem de sucesso
+            root.innerHTML = ''; // Limpa o modal
+            onDone && onDone(); // Atualiza a lista
+          }
+        } catch (error) {
+          openNotificationModal(error.message || 'Erro ao excluir o ponto.', false); // Mensagem de erro
+        }
+      });
     };
   }
 
