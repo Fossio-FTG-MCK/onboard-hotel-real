@@ -1,11 +1,10 @@
-
 // pages/AddPontos.js
 
 const supabaseUrl = 'https://kpjwznuthdnodfqgnidk.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwand6bnV0aGRub2RmcWduaWRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4MDcxMjcsImV4cCI6MjA1OTM4MzEyN30.8rtnknzowlYM393S_awylDyKHBG9P3cI2VrKgQwxqNU';
 
 async function fetchPontos() {
-  const resp = await fetch(`${supabaseUrl}/rest/v1/add_pontos?select=*,usuarios(id,nome_usuario,email,telefone)&order=usado.asc,id.asc`, {
+  const resp = await fetch(`${supabaseUrl}/rest/v1/add_pontos?select=*,usuario:usuario_utilizador(id,nome_usuario)&order=usado.asc,id.asc`, {
     headers: {
       apikey: supabaseKey,
       Authorization: `Bearer ${supabaseKey}`,
@@ -18,7 +17,7 @@ async function fetchPontos() {
 
 async function fetchUsuariosLike(term) {
   const query = encodeURIComponent(term);
-  const resp = await fetch(`${supabaseUrl}/rest/v1/usuarios?select=id,nome_usuario,email,telefone&or=(nome_usuario.ilike.*${query}*,email.ilike.*${query}*,telefone.ilike.*${query}*)&limit=10`, {
+  const resp = await fetch(`${supabaseUrl}/rest/v1/usuarios?select=id,nome_usuario&or=(nome_usuario.ilike.*${query}*,email.ilike.*${query}*)&limit=10`, {
     headers: {
       apikey: supabaseKey,
       Authorization: `Bearer ${supabaseKey}`
@@ -58,23 +57,11 @@ async function updatePonto(id, data) {
   return (await resp.json())[0];
 }
 
-async function deletePonto(id) {
-  const resp = await fetch(`${supabaseUrl}/rest/v1/add_pontos?id=eq.${id}`, {
-    method: 'DELETE',
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`
-    }
-  });
-  if (!resp.ok) throw new Error('Erro ao remover ponto');
-  return true;
-}
-
 export async function render({ main }) {
   if (!main) main = document.querySelector('.main-content');
   main.innerHTML = `
     <div class="top-bar">
-      <h1>Adicionar Pontos</h1>
+      <h1>Pontuação Extra</h1>
       <button id="btnAddPonto" class="btn-add-beneficio">+ Adicionar</button>
     </div>
     <div class="beneficios-tablebox">
@@ -82,14 +69,13 @@ export async function render({ main }) {
         <thead>
           <tr>
             <th>Usuário</th>
-            <th>Email</th>
             <th>Pontos</th>
             <th>Usado</th>
             <th class="actions-cell"></th>
           </tr>
         </thead>
         <tbody id="pontos-table-body">
-          <tr><td colspan="5">Carregando...</td></tr>
+          <tr><td colspan="4">Carregando...</td></tr>
         </tbody>
       </table>
     </div>
@@ -101,17 +87,18 @@ export async function render({ main }) {
 
   async function load() {
     const body = main.querySelector('#pontos-table-body');
-    body.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
+    body.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
     try {
       const list = await fetchPontos();
       body.innerHTML = list.map(p => `
         <tr>
-          <td>${p.usuarios?.nome_usuario || '-'}</td>
-          <td>${p.usuarios?.email || '-'}</td>
+          <td>${p.usuario?.nome_usuario || '-'}</td>
           <td>${p.pontos}</td>
           <td>${p.usado ? '✅' : '❌'}</td>
           <td class="actions-cell">
-            <button class="action-edit-btn" data-id="${p.id}">✏️</button>
+            <button class="action-edit-btn" data-id="${p.id}" title="Editar">
+              <svg fill="none" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="4.5" r="1.4" fill="#7986a0"/><circle cx="10" cy="10" r="1.4" fill="#7986a0"/><circle cx="10" cy="15.5" r="1.4" fill="#7986a0"/></svg>
+            </button>
           </td>
         </tr>
       `).join('');
@@ -121,7 +108,7 @@ export async function render({ main }) {
       });
 
     } catch (e) {
-      body.innerHTML = '<tr><td colspan="5" style="color:red;">Erro ao carregar</td></tr>';
+      body.innerHTML = '<tr><td colspan="4" style="color:red;">Erro ao carregar</td></tr>';
     }
   }
 
@@ -134,24 +121,39 @@ export async function render({ main }) {
       ponto = list.find(p => p.id === pontoId);
     }
 
-    const usuarioNome = ponto?.usuarios?.nome_usuario || '';
     const html = `
       <div class="login-modal-overlay">
         <div class="login-modal">
           <button class="login-close-btn" title="Fechar" id="closePontoModal">&times;</button>
           <h2>${ponto ? 'Editar' : 'Adicionar'} Ponto</h2>
-          <div class="form-group">
-            <label>Pontos</label>
-            <input id="inputPontos" type="number" min="1" value="${ponto?.pontos || ''}" />
-          </div>
-          <div class="form-group">
-            <label>Usuário (busca)</label>
-            <input id="inputUsuario" type="text" placeholder="Nome, email ou telefone" value="${usuarioNome}" />
-            <div class="search-results-dropdown" id="searchDropdown" style="display:none;"></div>
-          </div>
-          <div class="drawer-actions">
-            <button id="savePontoBtn" class="btn-save">Salvar</button>
-          </div>
+          <form id="pontoForm">
+            <div class="form-group">
+              <label for="inputPontos">Pontos</label>
+              <input 
+                id="inputPontos" 
+                name="pontos"
+                type="number" 
+                min="1" 
+                value="${ponto?.pontos || ''}" 
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="inputUsuario">Usuário (busca por nome ou email)</label>
+              <input 
+                id="inputUsuario" 
+                name="usuario"
+                type="text" 
+                placeholder="Digite nome ou email" 
+                value="${ponto?.usuario?.nome_usuario || ''}" 
+                required
+              />
+              <div class="search-results-dropdown" id="searchDropdown" style="display:none;"></div>
+            </div>
+            <div class="drawer-actions">
+              <button type="submit" id="savePontoBtn" class="btn-save">Salvar</button>
+            </div>
+          </form>
         </div>
       </div>
     `;
@@ -159,43 +161,71 @@ export async function render({ main }) {
     root.innerHTML = html;
 
     const el = root.querySelector('.login-modal-overlay');
+    const form = el.querySelector('#pontoForm');
     const close = el.querySelector('#closePontoModal');
     const inputUsuario = el.querySelector('#inputUsuario');
     const inputPontos = el.querySelector('#inputPontos');
     const dropdown = el.querySelector('#searchDropdown');
-    const btnSave = el.querySelector('#savePontoBtn');
 
     let selectedUserId = ponto?.usuario_utilizador || null;
 
     close.onclick = () => (root.innerHTML = '');
 
+    let searchTimeout;
     inputUsuario.oninput = async () => {
       const term = inputUsuario.value.trim();
+      selectedUserId = null; // Reset selected user when input changes
+      
       if (term.length < 2) {
         dropdown.style.display = 'none';
         return;
       }
-      const results = await fetchUsuariosLike(term);
-      if (!results.length) {
-        dropdown.innerHTML = '<ul><li>Nenhum resultado</li></ul>';
-        dropdown.style.display = 'block';
-        return;
-      }
-      dropdown.innerHTML = '<ul>' + results.map(u => `<li data-id="${u.id}">${u.nome_usuario} - ${u.email}</li>`).join('') + '</ul>';
-      dropdown.style.display = 'block';
-      dropdown.querySelectorAll('li').forEach(li => {
-        li.onclick = () => {
-          selectedUserId = li.dataset.id;
-          inputUsuario.value = li.textContent;
-          dropdown.style.display = 'none';
-        };
-      });
+
+      // Clear previous timeout
+      if (searchTimeout) clearTimeout(searchTimeout);
+
+      // Set new timeout to avoid too many requests
+      searchTimeout = setTimeout(async () => {
+        try {
+          const results = await fetchUsuariosLike(term);
+          if (results.length > 0) {
+            dropdown.innerHTML = '<ul>' + results.map(u => 
+              `<li data-id="${u.id}" data-nome="${u.nome_usuario}">${u.nome_usuario}</li>`
+            ).join('') + '</ul>';
+            dropdown.style.display = 'block';
+            
+            dropdown.querySelectorAll('li').forEach(li => {
+              li.onclick = () => {
+                selectedUserId = li.dataset.id;
+                inputUsuario.value = li.dataset.nome;
+                dropdown.style.display = 'none';
+              };
+            });
+          } else {
+            dropdown.innerHTML = '<ul><li>Nenhum usuário encontrado</li></ul>';
+            dropdown.style.display = 'block';
+          }
+        } catch (error) {
+          console.error('Erro ao buscar usuários:', error);
+          dropdown.innerHTML = '<ul><li>Erro ao buscar usuários</li></ul>';
+          dropdown.style.display = 'block';
+        }
+      }, 300);
     };
 
-    btnSave.onclick = async () => {
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!inputUsuario.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      
       const pontos = parseInt(inputPontos.value.trim());
       if (!selectedUserId || isNaN(pontos) || pontos <= 0) {
-        alert('Preencha os campos corretamente.');
+        alert('Por favor, preencha todos os campos corretamente e selecione um usuário da lista.');
         return;
       }
 
