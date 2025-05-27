@@ -32,7 +32,7 @@ async function insertPonto(data) {
     method: 'POST',
     headers: {
       apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
+      Authorization: `Bearer ${window.CURRENT_USER?.session?.access_token}`,
       'Content-Type': 'application/json',
       Prefer: 'return=representation'
     },
