@@ -143,7 +143,7 @@ function templateTable() {
             <th>Título</th>
             <th>Parceiro</th>
             <th>Usuário</th>
-            <th>Pontos</th>
+            <th class="pontos-cell">Pontos</th>
             <th>Status</th>
             <th>Usado em</th>
             <th class="actions-cell"></th>
@@ -243,7 +243,7 @@ export async function render({ main }) {
       .vouchers-table { width: 100%;}
       .main-table .actions-cell { width:46px; text-align:center;}
       .main-table td, .main-table th { vertical-align:middle; }
-      .main-table th { background:#f2f4fa; font-size:1.01em;font-weight:700;color:#223469;border-bottom:2px solid #e4e9f4;}
+      .main-table th { background:#f2f4fa; font-size:1.01em;font-weight:700;color:#223469;border-bottom:2px solid #e4e9f4;text-align:left;}
       .main-table td { border-bottom:1px solid #ecf2fa; font-size:.98em;}
       .main-table tbody tr:hover td { background:#f7fafd; }
       .main-table .actions-cell button { background:none; border:none; cursor:pointer; padding:6px; border-radius:6px; color:#757aa5; transition:background .14s; font-size:1.13em; vertical-align:middle;}
@@ -257,7 +257,7 @@ export async function render({ main }) {
         width: 390px; max-width: 99vw; height:100vh;
         background:#fff; box-shadow:-9px 0 32px rgba(32,50,100,.10); border-radius:18px 0 0 18px;
         display:flex; flex-direction:column; padding:22px 28px 10px 24px;
-        position:relative; animation:drawerSlideIn .33s;
+        position:relative; animation:drawerSlideIn .33s; overflow-y: auto;
       }
       @keyframes drawerSlideIn {
         from { transform: translateX(160px); opacity:0; }
@@ -266,7 +266,7 @@ export async function render({ main }) {
       .drawer-close-btn { position:absolute; top:12px; right:19px; background:none; border:none; font-size:2rem; color:#6989c7; cursor:pointer; transition:.17s;}
       .drawer-close-btn:hover { color: #d90429;}
       .voucher-drawer h2 { margin:0 0 13px 0; font-size:1.19em; color:#1A2950; font-weight:600; letter-spacing:-.01em;}
-      .voucher-drawer form { display:flex; flex-direction:column; gap:12px; flex:1; }
+      .voucher-drawer form { display:flex; flex-direction:column; gap:12px; flex:1; overflow-y: auto; padding-right: 8px; }
       .voucher-drawer label { color:#333a55; font-size:.96em; font-weight:500;}
       .voucher-drawer input,
       .voucher-drawer select {
@@ -282,7 +282,7 @@ export async function render({ main }) {
       .btn-delete { background:#fff0f5; color:#ca2650; font-weight:500; border:1px solid #e793c1; padding:10px 15px; font-size:.99em; border-radius:6px; cursor:pointer; margin-left:auto;transition:background .14s, color .14s; }
       .btn-delete:hover { background: #f5d4e7; color: #bb1048; }
       @media (max-width: 700px) {
-        .drawer { width: 99vw; border-radius:0; padding-right:11vw; min-width:unset;}
+        .drawer { width: 99vw; border-radius:0; padding-right:11vw; min-width:unset; overflow-y: auto;}
       }
     `;
     document.head.appendChild(st);
@@ -429,7 +429,7 @@ export async function render({ main }) {
           <td>${escapeHTML(v.titulo)}</td>
           <td>${getParceiroNome(v.parceiro_id)}</td>
           <td>${getUsuarioNome(v.usuario_id)}</td>
-          <td style="text-align:right;">${(v.pontos != null && v.pontos !== "") ? escapeHTML(v.pontos) : ''}</td>
+          <td class="pontos-cell">${(v.pontos != null && v.pontos !== "") ? escapeHTML(v.pontos) : ''}</td>
           <td>${v.status ? escapeHTML(v.status) : ''}</td>
           <td>${v.usado_em ? formatDate(v.usado_em) : ''}</td>
           <td class="actions-cell">

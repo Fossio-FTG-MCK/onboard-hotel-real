@@ -94,7 +94,7 @@ function templateTable() {
       <table class="main-table parceiros-table">
         <thead>
           <tr>
-            <th>Logo</th>
+            <th class="icon-cell">Logo</th>
             <th>Nome</th>
             <th>Telefone</th>
             <th>E-mail</th>
@@ -222,7 +222,7 @@ export async function render({ main }) {
       .parceiros-table { width: 100%;}
       .main-table .actions-cell { width:46px; text-align:center;}
       .main-table td, .main-table th { vertical-align:middle; }
-      .main-table th { background:#f2f4fa; font-size:1.01em;font-weight:700;color:#223469;border-bottom:2px solid #e4e9f4;}
+      .main-table th { background:#f2f4fa; font-size:1.01em;font-weight:700;color:#223469;border-bottom:2px solid #e4e9f4;text-align:left;}
       .main-table td { border-bottom:1px solid #ecf2fa; font-size:.98em;}
       .main-table tbody tr:hover td { background:#f7fafd; }
       .parceiros-table img { display:inline-block;vertical-align:middle;background:#fcfcfe;}
@@ -237,7 +237,7 @@ export async function render({ main }) {
         width: 390px; max-width: 99vw; height:100vh;
         background:#fff; box-shadow:-9px 0 32px rgba(32,50,100,.10); border-radius:18px 0 0 18px;
         display:flex; flex-direction:column; padding:22px 28px 10px 24px;
-        position:relative; animation:drawerSlideIn .33s;
+        position:relative; animation:drawerSlideIn .33s; overflow-y: auto;
       }
       @keyframes drawerSlideIn {
         from { transform: translateX(160px); opacity:0; }
@@ -246,7 +246,7 @@ export async function render({ main }) {
       .drawer-close-btn { position:absolute; top:12px; right:19px; background:none; border:none; font-size:2rem; color:#6989c7; cursor:pointer; transition:.17s;}
       .drawer-close-btn:hover { color: #d90429;}
       .parceiro-drawer h2 { margin:0 0 13px 0; font-size:1.19em; color:#1A2950; font-weight:600; letter-spacing:-.01em;}
-      .parceiro-drawer form { display:flex; flex-direction:column; gap:12px; flex:1; }
+      .parceiro-drawer form { display:flex; flex-direction:column; gap:12px; flex:1; overflow-y: auto; padding-right: 8px; }
       .parceiro-drawer label { color:#333a55; font-size:.96em; font-weight:500;}
       .parceiro-drawer input,
       .parceiro-drawer textarea {
@@ -262,7 +262,7 @@ export async function render({ main }) {
       .btn-delete { background:#fff0f5; color:#ca2650; font-weight:500; border:1px solid #e793c1; padding:10px 15px; font-size:.99em; border-radius:6px; cursor:pointer; margin-left:auto;transition:background .14s, color .14s; }
       .btn-delete:hover { background: #f5d4e7; color: #bb1048; }
       @media (max-width: 700px) {
-        .drawer { width: 99vw; border-radius:0; padding-right:11vw; min-width:unset;}
+        .drawer { width: 99vw; border-radius:0; padding-right:11vw; min-width:unset; overflow-y: auto;}
       }
     `;
     document.head.appendChild(st);
@@ -374,7 +374,7 @@ export async function render({ main }) {
         .map(
           (p, idx) => `
           <tr data-idx="${idx}">
-            <td>${renderLogo(p.logo)}</td>
+            <td class="icon-cell">${renderLogo(p.logo)}</td>
             <td>${escapeHTML(p.nome || '')}${p.novo ? ' <span style="background:#ffe22c;color:#805f00;border-radius:10px;font-size:.91em;padding:1px 8px;margin-left:7px;">NOVO</span>' : ''}</td>
             <td>${escapeHTML(p.telefone || '')}</td>
             <td>${escapeHTML(p.email || '')}</td>

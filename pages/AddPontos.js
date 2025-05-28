@@ -138,8 +138,8 @@ export async function render({ main }) {
         <thead>
           <tr>
             <th>Usuário</th>
-            <th>Pontos</th>
-            <th>Usado</th>
+            <th class="pontos-cell">Pontos</th>
+            <th class="destaque-cell">Usado</th>
             <th class="actions-cell"></th>
           </tr>
         </thead>
@@ -162,8 +162,8 @@ export async function render({ main }) {
       body.innerHTML = list.map(p => `
         <tr>
           <td>${p.usuario?.nome_usuario || '-'}</td>
-          <td>${p.pontos}</td>
-          <td>${p.usado ? '✅' : '❌'}</td>
+          <td class="pontos-cell">${p.pontos}</td>
+          <td class="destaque-cell">${p.usado ? '✅' : '❌'}</td>
           <td class="actions-cell">
             <button class="action-edit-btn" data-id="${p.id}" title="Editar">
               <svg fill="none" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="4.5" r="1.4" fill="#7986a0"/><circle cx="10" cy="10" r="1.4" fill="#7986a0"/><circle cx="10" cy="15.5" r="1.4" fill="#7986a0"/></svg>

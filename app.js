@@ -29,12 +29,86 @@ function setActiveMenu(page) {
 const SUPABASE_URL = 'https://kpjwznuthdnodfqgnidk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwand6bnV0aGRub2RmcWduaWRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4MDcxMjcsImV4cCI6MjA1OTM4MzEyN30.8rtnknzowlYM393S_awylDyKHBG9P3cI2VrKgQwxqNU';
 
+// Token management functions
+function saveTokensToStorage(session) {
+  if (session) {
+    localStorage.setItem('hotel_real_access_token', session.access_token || '');
+    localStorage.setItem('hotel_real_refresh_token', session.refresh_token || '');
+    localStorage.setItem('hotel_real_token_expires_at', session.expires_at ? session.expires_at.toString() : '');
+    localStorage.setItem('hotel_real_token_expires_in', session.expires_in ? session.expires_in.toString() : '');
+  }
+}
+
+function getTokensFromStorage() {
+  const accessToken = localStorage.getItem('hotel_real_access_token');
+  const refreshToken = localStorage.getItem('hotel_real_refresh_token');
+  const expiresAt = localStorage.getItem('hotel_real_token_expires_at');
+  const expiresIn = localStorage.getItem('hotel_real_token_expires_in');
+  
+  if (accessToken && refreshToken) {
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_at: expiresAt ? parseInt(expiresAt) : null,
+      expires_in: expiresIn ? parseInt(expiresIn) : null
+    };
+  }
+  return null;
+}
+
+function clearTokensFromStorage() {
+  localStorage.removeItem('hotel_real_access_token');
+  localStorage.removeItem('hotel_real_refresh_token');
+  localStorage.removeItem('hotel_real_token_expires_at');
+  localStorage.removeItem('hotel_real_token_expires_in');
+  localStorage.removeItem('hotel_real_user_email');
+}
+
+function saveUserToStorage(user) {
+  if (user && user.email) {
+    localStorage.setItem('hotel_real_user_email', user.email);
+  }
+}
+
+function getUserFromStorage() {
+  const email = localStorage.getItem('hotel_real_user_email');
+  const tokens = getTokensFromStorage();
+  
+  if (email && tokens) {
+    return {
+      email: email,
+      session: tokens
+    };
+  }
+  return null;
+}
+
+function isTokenExpired(session) {
+  if (!session || !session.expires_at) return true;
+  
+  // Verifica se o token expira em menos de 5 minutos
+  const now = Math.floor(Date.now() / 1000);
+  const expiresAt = session.expires_at;
+  return (expiresAt - now) < 300; // 5 minutos de margem
+}
+
 // Simples "auth" state local (prototipo)
 let CURRENT_USER = null;
 function setCurrentUser(user) {
   CURRENT_USER = user;
   // Make it available globally
   window.CURRENT_USER = user;
+  
+  // Save to localStorage
+  if (user) {
+    saveUserToStorage(user);
+    if (user.session) {
+      saveTokensToStorage(user.session);
+    }
+  } else {
+    clearTokensFromStorage();
+  }
+  
   // Mostra no botão "Entrar" se está logado
   const btn = document.getElementById('openLoginModal');
   if (btn) {
@@ -44,6 +118,22 @@ function setCurrentUser(user) {
       btn.innerHTML = `<svg width="23" height="23" viewBox="0 0 20 20" style="vertical-align:middle;"><circle cx="10" cy="6.5" r="4" fill="#36a9f4"/><ellipse cx="10" cy="15.5" rx="7" ry="3.2" fill="#36a9f4" opacity=".6"/></svg> <span>Entrar</span>`;
     }
   }
+}
+
+// Initialize user from localStorage on app start
+function initializeUserFromStorage() {
+  const storedUser = getUserFromStorage();
+  if (storedUser) {
+    // Verifica se o token não expirou
+    if (!isTokenExpired(storedUser.session)) {
+      setCurrentUser(storedUser);
+      return true;
+    } else {
+      // Token expirado, limpa o storage
+      clearTokensFromStorage();
+    }
+  }
+  return false;
 }
 
 // Supabase Auth endpoints
@@ -139,6 +229,8 @@ function createLoginModal(isPersistent = false) {
         loginSuccess.style.display = '';
         setTimeout(() => {
           closeModal();
+          // Recarrega a página atual para aplicar proteções de rota corretamente
+          onNavigate();
         }, 1100);
       } catch (err) {
         loginError.textContent = err.message || "Não foi possível efetuar login.";
@@ -291,14 +383,47 @@ function enableLoginModalMenu() {
 
 // Adicione esta função para deslogar o usuário
 function logout() {
-  setCurrentUser(null); // Limpa o usuário atual
+  setCurrentUser(null); // Limpa o usuário atual e tokens do localStorage
   closeModal(); // Fecha o modal se estiver aberto
-  openLoginModal(); // Abre o modal de login após deslogar
+  
+  // Redireciona para a página inicial após logout
+  window.location.hash = '#/beneficios';
+  
+  // Abre o modal de login após redirecionar
+  setTimeout(() => {
+    openLoginModal();
+  }, 100);
 }
 
 // --------- END LOGIN ---------
 
+// Função para verificar se o usuário está autenticado
+function isUserAuthenticated() {
+  return CURRENT_USER !== null;
+}
+
+// Função para redirecionar para página inicial se não autenticado
+function redirectToHomeIfNotAuthenticated() {
+  if (!isUserAuthenticated()) {
+    // Redireciona para a página inicial (beneficios)
+    window.location.hash = '#/beneficios';
+    return true; // Indica que foi redirecionado
+  }
+  return false; // Indica que não foi redirecionado
+}
+
 export async function loadPage(page) {
+  // Verifica se o usuário está autenticado
+  if (!isUserAuthenticated()) {
+    // Se não estiver autenticado, redireciona para página inicial
+    if (page !== 'beneficios') {
+      window.location.hash = '#/beneficios';
+      return;
+    }
+    // Se já estiver na página inicial, garante que o modal de login está aberto
+    openLoginModal();
+  }
+
   // Limpa área principal
   const main = document.querySelector('.main-content');
   if (main) main.innerHTML = '<p>Carregando...</p>';
@@ -324,6 +449,22 @@ export async function loadPage(page) {
 // Inicialização do SPA
 function onNavigate() {
   const page = getCurrentPageFromHash();
+  
+  // Verifica autenticação antes de navegar
+  if (!isUserAuthenticated()) {
+    // Se não estiver autenticado e tentar acessar página que não seja beneficios
+    if (page !== 'beneficios') {
+      window.location.hash = '#/beneficios';
+      return;
+    }
+    // Se estiver na página beneficios mas não autenticado, garante que o modal está aberto
+    setTimeout(() => {
+      if (!isUserAuthenticated()) {
+        openLoginModal();
+      }
+    }, 100);
+  }
+  
   loadPage(page);
 }
 
@@ -343,11 +484,20 @@ function enableSpaLinks() {
 // Inicialização global ao load
 window.addEventListener('DOMContentLoaded', () => {
   enableSpaLinks();
+  
+  // Tenta inicializar o usuário do localStorage primeiro
+  const userLoggedIn = initializeUserFromStorage();
+  
+  // Se não estiver logado, redireciona para página inicial
+  if (!userLoggedIn) {
+    redirectToHomeIfNotAuthenticated();
+  }
+  
   onNavigate();
   enableLoginModalMenu();
   
   // Verifica se o usuário está logado e abre o modal se não estiver
-  if (!CURRENT_USER) {
+  if (!userLoggedIn && !CURRENT_USER) {
     openLoginModal(); // Abre o modal de login se o usuário não estiver logado
   }
 

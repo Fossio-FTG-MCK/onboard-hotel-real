@@ -27,3 +27,40 @@
 .main-table tbody tr:hover {
   background: #f7fafd;
 }
+
+/* Células especiais que devem ter alinhamento centralizado */
+.main-table .icon-cell,
+.main-table .icon-cell td,
+.main-table th.icon-cell,
+.main-table td.icon-cell {
+  text-align: center;
+  width: 60px;
+}
+
+.main-table .actions-cell,
+.main-table .actions-cell td,
+.main-table th.actions-cell,
+.main-table td.actions-cell {
+  text-align: center;
+  width: 80px;
+}
+
+/* Alinhamento para pontos/números */
+.main-table .pontos-cell,
+.main-table .pontos-cell td,
+.main-table th.pontos-cell,
+.main-table td.pontos-cell {
+  text-align: center;
+}
+
+/* Garantir que ícones e logos sejam exibidos corretamente */
+.main-table td img,
+.main-table td svg,
+.main-table td i {
+  vertical-align: middle;
+}
+
+/* Estilo para coluna de destaque */
+.main-table .destaque-cell {
+  text-align: center;
+}

@@ -1,5 +1,6 @@
 // pages/Beneficios.js
 
+
 const supabaseUrl = 'https://kpjwznuthdnodfqgnidk.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtwand6bnV0aGRub2RmcWduaWRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4MDcxMjcsImV4cCI6MjA1OTM4MzEyN30.8rtnknzowlYM393S_awylDyKHBG9P3cI2VrKgQwxqNU';
 
@@ -16,30 +17,43 @@ function escapeHTML(str) {
 function renderIcone(icone) {
   if (!icone) return '';
   const val = icone.trim();
+  
+  // Suporte para classes Font Awesome
   if (val.startsWith('fa')) {
-    // Ex: fas fa-bed
-    return `<i class="${escapeHTML(val)}" style="font-size:1.28em;"></i>`;
-  } else if (val.startsWith('<svg')) {
+    // Ex: fas fa-bed, fa-solid fa-bed, etc.
+    return `<i class="${escapeHTML(val)}" style="font-size:1.4em; color: #36a9f4;"></i>`;
+  } 
+  // Suporte para SVG inline
+  else if (val.startsWith('<svg')) {
     return val;
-  } else if (/^https?:\/\//.test(val)) {
-    return `<img src="${escapeHTML(val)}" alt="Ícone" width="24" height="24" style="vertical-align:middle;" loading="lazy"/>`;
-  } else if (/^[\u{1F300}-\u{1FAD6}\u2600-\u26FF]$/u.test(val)) {
-    // Suporte mínimo para emoji
-    return `<span style="font-size:1.6em;line-height:1;">${escapeHTML(val)}</span>`;
+  } 
+  // Suporte para URLs de imagem
+  else if (/^https?:\/\//.test(val)) {
+    return `<img src="${escapeHTML(val)}" alt="Ícone" width="28" height="28" style="vertical-align:middle; border-radius: 4px;" loading="lazy"/>`;
+  } 
+  // Suporte para emojis Unicode
+  else if (/^[\u{1F300}-\u{1FAD6}\u2600-\u26FF\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2700}-\u27BF]$/u.test(val)) {
+    return `<span style="font-size:1.8em; line-height:1;">${escapeHTML(val)}</span>`;
   }
-  return '';
+  // Fallback para texto simples como emoji
+  else {
+    return `<span style="font-size:1.6em; line-height:1;">${escapeHTML(val)}</span>`;
+  }
 }
 
 // --- DATA ACCESS ---
 
 // Busca benefícios pela view (não traz id/categoria_id pois não estão disponíveis)
 async function fetchBeneficios() {
+  const session = window.CURRENT_USER?.session;
+  const authToken = session?.access_token || supabaseKey;
+
   const resp = await fetch(
     `${supabaseUrl}/rest/v1/v_beneficios_com_categorias?select=titulo,descricao,icone,pontos_necessarios,destaque,categoria_nome`,
     {
       headers: {
         apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
+        Authorization: `Bearer ${authToken}`,
         Accept: 'application/json',
       },
     }
@@ -55,12 +69,15 @@ async function fetchBeneficioByTitulo(titulo) {
 }
 
 async function fetchCategorias() {
+  const session = window.CURRENT_USER?.session;
+  const authToken = session?.access_token || supabaseKey;
+
   const resp = await fetch(
     `${supabaseUrl}/rest/v1/categorias_beneficios?select=id,nome`,
     {
       headers: {
         apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
+        Authorization: `Bearer ${authToken}`,
         Accept: 'application/json',
       },
     }
@@ -69,12 +86,16 @@ async function fetchCategorias() {
   return resp.json();
 }
 
+
 async function createBeneficio(b) {
+  const session = window.CURRENT_USER?.session;
+  const authToken = session?.access_token || supabaseKey;
+
   const resp = await fetch(`${supabaseUrl}/rest/v1/beneficios`, {
     method: 'POST',
     headers: {
       apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
+      Authorization: `Bearer ${authToken}`,
       'Content-Type': 'application/json',
       Prefer: 'return=representation',
     },
@@ -88,13 +109,16 @@ async function createBeneficio(b) {
 }
 
 async function updateBeneficio(id, changes) {
+  const session = window.CURRENT_USER?.session;
+  const authToken = session?.access_token || supabaseKey;
+
   const resp = await fetch(
     `${supabaseUrl}/rest/v1/beneficios?id=eq.${encodeURIComponent(id)}`,
     {
       method: 'PATCH',
       headers: {
         apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
+        Authorization: `Bearer ${authToken}`,
         'Content-Type': 'application/json',
         Prefer: 'return=representation',
       },
@@ -109,13 +133,16 @@ async function updateBeneficio(id, changes) {
 }
 
 async function deleteBeneficio(id) {
+  const session = window.CURRENT_USER?.session;
+  const authToken = session?.access_token || supabaseKey;
+
   const resp = await fetch(
     `${supabaseUrl}/rest/v1/beneficios?id=eq.${encodeURIComponent(id)}`,
     {
       method: 'DELETE',
       headers: {
         apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
+        Authorization: `Bearer ${authToken}`,
       },
     }
   );
@@ -143,8 +170,8 @@ function templateTable() {
             <th>Título</th>
             <th>Descrição</th>
             <th>Categoria</th>
-            <th>Pontos</th>
-            <th>Destaque</th>
+            <th class="pontos-cell">Pontos</th>
+            <th class="destaque-cell">Destaque</th>
             <th class="actions-cell"></th>
           </tr>
         </thead>
@@ -235,6 +262,21 @@ function templateBeneficioDrawer({ mode, beneficio = {}, categorias = [] }) {
 // --- MAIN RENDER ---
 export async function render({ main }) {
   if (!main) main = document.querySelector('.main-content');
+  
+  // Verificar se o usuário está autenticado
+  if (!window.CURRENT_USER?.session?.access_token) {
+    main.innerHTML = `
+      <div style="text-align: center; padding: 40px; color: #666;">
+        <h2>Acesso Restrito</h2>
+        <p>Você precisa estar logado para acessar a página de benefícios.</p>
+        <button onclick="window.openLoginModal?.()" style="background: #36a9f4; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+          Fazer Login
+        </button>
+      </div>
+    `;
+    return;
+  }
+
   main.innerHTML = templateTable();
 
   // STYLE: Benefits page visual enhancements (only once in DOM)
@@ -297,6 +339,7 @@ export async function render({ main }) {
       font-weight:700;
       color: #223469;
       border-bottom: 2px solid #e4e9f4;
+      text-align: left;
     }
     .main-table td {
       border-bottom: 1px solid #ecf2fa;
@@ -340,6 +383,7 @@ export async function render({ main }) {
       padding: 22px 28px 10px 24px;
       position: relative;
       animation: drawerSlideIn .33s;
+      overflow-y: auto;
     }
     @keyframes drawerSlideIn {
       from { transform: translateX(120px); opacity:0 }
@@ -368,6 +412,8 @@ export async function render({ main }) {
       flex-direction: column;
       gap: 12px;
       flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
     }
     .beneficio-drawer label { color: #333a55;font-size:.96em;font-weight:500;}
     .beneficio-drawer input, .beneficio-drawer select, .beneficio-drawer textarea {
@@ -433,6 +479,7 @@ export async function render({ main }) {
         width:98vw; border-radius:0;
         padding-right: 11vw;
         min-width: unset;
+        overflow-y: auto;
       }
     }
     `;
@@ -443,20 +490,31 @@ export async function render({ main }) {
   async function findBenefitFromRow(rowData) {
     // Busca pelo título (comp), mas poderia ser aprimorado com mais campos.
     // ATENÇÃO: Não há id disponível pela view, então só é possível buscar por título.
+    const session = window.CURRENT_USER?.session;
+    const authToken = session?.access_token || supabaseKey;
+
     const resp = await fetch(
       `${supabaseUrl}/rest/v1/beneficios?select=*,categoria_id&titulo=eq.${encodeURIComponent(rowData.titulo)}`,
       {
         headers: {
           apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
+          Authorization: `Bearer ${authToken}`,
           Accept: 'application/json'
         }
       }
     );
     if (!resp.ok) return null;
-    const list = await resp.json();
-    // Se houver mais de um, pegue o melhor match, de preferencia igual todos os campos...
-    return (list && list.length === 1) ? list[0] : null;
+    const arr = await resp.json();
+    
+    // Em caso de múltiplos, tenta matchar melhor
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+    if (arr.length === 1) return arr[0];
+    
+    // Match melhor: considera pontos e categoria
+    return arr.find(a =>
+        a.pontos_necessarios == rowData.pontos_necessarios &&
+        (a.descricao || '') === (rowData.descricao || '')
+      ) || arr[0];
   }
 
   function openDrawer({ mode, beneficio, onDone }) {
@@ -578,8 +636,8 @@ export async function render({ main }) {
           <td>${escapeHTML(b.titulo || '')}</td>
           <td>${escapeHTML(b.descricao || '')}</td>
           <td>${escapeHTML(b.categoria_nome || '')}</td>
-          <td style="text-align:right;">${b.pontos_necessarios != null ? escapeHTML(b.pontos_necessarios) : ''}</td>
-          <td>
+          <td class="pontos-cell">${b.pontos_necessarios != null ? escapeHTML(b.pontos_necessarios) : ''}</td>
+          <td class="destaque-cell">
              ${b.destaque ? '<span class="destaque-label">Destaque</span>' : ''}
           </td>
           <td class="actions-cell">
@@ -601,30 +659,7 @@ export async function render({ main }) {
             const b = list[idx];
             // Tenta buscar id do benefício real pela tabela com base em título.
             // (Só vai funcionar se benefício não foi removido/manualmente alterado na view)
-            const beneficioRaw = await (async () => {
-              // Busca apenas para admin: lê beneficio da tabela direto (igual título).
-              // Tenta matchar não só pelo título, mas também outros campos.
-              const resp = await fetch(
-                `${supabaseUrl}/rest/v1/beneficios?select=*,categoria_id&titulo=eq.${encodeURIComponent(b.titulo || '')}`,
-                {
-                  headers: {
-                    apikey: supabaseKey,
-                    Authorization: `Bearer ${supabaseKey}`,
-                    Accept: 'application/json'
-                  }
-                }
-              );
-              if (!resp.ok) return null;
-              const arr = await resp.json();
-              // Em caso de múltiplos, tenta matchar melhor
-              if (!Array.isArray(arr) || arr.length === 0) return null;
-              if (arr.length === 1) return arr[0];
-              // Match melhor: considera pontos e categoria
-              return arr.find(a =>
-                  a.pontos_necessarios == b.pontos_necessarios &&
-                  (a.descricao || '') === (b.descricao || '')
-                ) || arr[0];
-            })();
+            const beneficioRaw = await findBenefitFromRow(b);
             if (!beneficioRaw || !beneficioRaw.id) {
               // Não achou o beneficio na tabela para editar
               alert('Não é possível editar: este benefício é proveniente apenas da view e não foi encontrado na tabela original. Edite ou adicione benefícios pelo botão "Adicionar Benefício".');
@@ -638,9 +673,23 @@ export async function render({ main }) {
           };
         });
     } catch (e) {
-      tableBody.innerHTML = `<tr><td colspan="7" style="color:#B00;font-weight:bold;">Erro ao carregar: ${escapeHTML(
-        e.message
-      )}</td></tr>`;
+      let errorMessage = 'Erro ao carregar benefícios';
+      
+      // Verificar se é erro de autenticação
+      if (e.message.includes('401') || e.message.includes('Unauthorized') || e.message.includes('JWT')) {
+        errorMessage = 'Erro de autenticação. Faça login novamente.';
+      } else if (e.message.includes('403') || e.message.includes('Forbidden')) {
+        errorMessage = 'Acesso negado. Você não tem permissão para acessar os benefícios.';
+      } else if (e.message.includes('network') || e.message.includes('fetch')) {
+        errorMessage = 'Erro de conexão. Verifique sua internet.';
+      } else if (e.message) {
+        errorMessage = e.message;
+      }
+      
+      tableBody.innerHTML = `<tr><td colspan="7" style="color:#B00;font-weight:bold;">
+        ${escapeHTML(errorMessage)}
+        ${errorMessage.includes('autenticação') ? '<br><button onclick="window.openLoginModal?.()" style="margin-top:10px;background:#36a9f4;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">Fazer Login</button>' : ''}
+      </td></tr>`;
     }
   }
 

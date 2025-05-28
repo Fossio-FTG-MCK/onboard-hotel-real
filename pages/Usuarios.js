@@ -48,7 +48,7 @@ function templateTable() {
             <th>Telefone</th>
             <th>Nível</th>
             <th>Tipo de Usuário</th>
-            <th style="text-align: right;">Criado em</th>
+            <th>Criado em</th>
           </tr>
         </thead>
         <tbody id="usuarios-table-body">
@@ -121,11 +121,6 @@ export async function render({ main }) {
       .main-table.usuarios-table td {
         text-align: left;
       }
-      .main-table.usuarios-table td:last-child,
-      .main-table.usuarios-table th:last-child {
-        text-align: right;
-        white-space: nowrap;
-      }
       .main-table.usuarios-table th:nth-child(2),
       .main-table.usuarios-table td:nth-child(2) {
         min-width: 170px;
@@ -192,7 +187,7 @@ export async function render({ main }) {
         <td>${escapeHTML(u.telefone || "")}</td>
         <td>${escapeHTML(u.nivel || "")}</td>
         <td>${escapeHTML(u.tipo_usuario || "")}</td>
-        <td style="text-align:right;">${formatDate(u.criado_em)}</td>
+        <td>${formatDate(u.criado_em)}</td>
       </tr>
     `).join('');
   } catch (e) {
