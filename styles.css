@@ -23,14 +23,19 @@ body {
 
 .sidemenu {
   width: 240px;
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
   background: var(--sidemenu-bg);
   color: var(--sidemenu-text);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   padding: 28px 0 0 0;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  overflow-y: auto;
 }
 
 .sidemenu-logo {
@@ -126,11 +131,33 @@ body {
   background: var(--active-bg);
 }
 
+.login-link-btn {
+  margin-top: auto;
+  margin-bottom: 20px;
+  margin-left: 22px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-weight: 500;
+  font-size: 1.03rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  column-gap: 9px;
+  border-radius: 5px;
+  transition: background 0.17s;
+  padding: 7px 11px 7px 9px;
+}
+.login-link-btn:hover {
+  background: var(--sidemenu-hover);
+}
+
 .main-content {
   flex: 1;
   padding: 44px 36px 36px 36px;
   background: var(--content-bg);
   min-height: 100vh;
+  margin-left: 240px;
 }
 
 /* LOGIN MODAL */
@@ -286,14 +313,18 @@ body {
   .sidemenu {
     width: 100%;
     height: auto;
+    max-height: unset;
     min-height: unset;
     flex-direction: row;
     border-right: none;
     border-bottom: 2px solid #203364;
     padding-bottom: 0;
+    position: relative;
+    z-index: unset;
   }
   .main-content {
     padding: 32px 12px 12px 12px;
+    margin-left: 0;
   }
   .sidemenu-logo {
     padding: 0 8px 0 8px;
@@ -319,6 +350,13 @@ body {
   .sidemenu a:focus {
     border-left: none;
     border-bottom: 4px solid #36a9f4;
+  }
+  .login-menu-btn,
+  .login-link-btn {
+    margin: 0;
+    margin-left: 8px;
+    padding: 7px 9px;
+    font-size: 0.9rem;
   }
 }
 

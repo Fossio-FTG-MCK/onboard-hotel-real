@@ -5,6 +5,8 @@ const routes = {
   vouchers: () => import('./pages/Vouchers.js'),
   usuarios: () => import('./pages/Usuarios.js'),
   'add-pontos': () => import('./pages/AddPontos.js'),
+  'checkout-infinitepay': () => import('./pages/checkout-finitepay.js'),
+  webhooks: () => import('./pages/Webhooks.js'),
 };
 
 function getCurrentPageFromHash() {
@@ -179,9 +181,14 @@ function createLoginModal(isPersistent = false) {
   overlay.innerHTML = getLoginModalHtml(isPersistent);
   modalRoot.appendChild(overlay);
 
-  // Close modal only if not persistent
-  if (!isPersistent) {
-    overlay.querySelector(".login-close-btn").onclick = () => closeModal();
+  // Close modal: para usuários logados, sempre permite fechar; para não logados, só se não for persistente
+  const closeBtn = overlay.querySelector(".login-close-btn");
+  if (closeBtn) {
+    if (CURRENT_USER || !isPersistent) {
+      closeBtn.onclick = () => closeModal();
+    } else {
+      closeBtn.style.display = 'none';
+    }
   }
 
   // Form logic
@@ -324,10 +331,12 @@ function openPasswordResetModal(prefilledEmail = "") {
 
 function getLoginModalHtml(isPersistent) {
   const closeButton = isPersistent ? '' : '<button class="login-close-btn" title="Fechar">&times;</button>';
-  if (CURRENT_USER)
+  if (CURRENT_USER) {
+    // Para usuários logados, sempre mostra o botão de close
+    const loggedInCloseButton = '<button class="login-close-btn" title="Fechar">&times;</button>';
     return `
       <div class="login-modal">
-        ${closeButton}
+        ${loggedInCloseButton}
         <h2>Bem-vindo!</h2>
         <div class="login-success" style="display:block;">Login realizado como <b>${CURRENT_USER.email}</b></div>
         <div class="login-links" style="margin: 0;">
@@ -335,6 +344,7 @@ function getLoginModalHtml(isPersistent) {
         </div>
       </div>
     `;
+  }
   return `
     <div class="login-modal">
       ${closeButton}
@@ -348,7 +358,7 @@ function getLoginModalHtml(isPersistent) {
         <div class="input-row">
           <input id="login-password" required type="password" autocomplete="current-password" placeholder="Sua senha" />
           <button type="button" class="pass-reveal-btn" tabindex="-1" aria-label="Exibir/ocultar senha">
-            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 20 20"><ellipse cx="10" cy="10" rx="7" ry="5.3" fill="none" stroke="#132455" stroke-width="1.5"/><circle cx="10" cy="10" r="2.5" fill="none" stroke="#1ca6f9" stroke-width="1.4"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 20 20"><ellipse cx="10" cy="10" rx="7" ry="5.3" fill="none" stroke="#132455" stroke-width="1.5"/><circle cx="10" cy="10" r="2.5" fill="none" stroke="#1ca6f9" stroke-width="1.4"/></circle>
           </button>
         </div>
         <button type="submit">Entrar</button>
