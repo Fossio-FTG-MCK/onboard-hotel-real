@@ -165,8 +165,11 @@ export async function render({ main }) {
           <td class="pontos-cell">${p.pontos}</td>
           <td class="destaque-cell">${p.usado ? '✅' : '❌'}</td>
           <td class="actions-cell">
-            <button class="action-edit-btn" data-id="${p.id}" title="Editar">
-              <svg fill="none" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="4.5" r="1.4" fill="#7986a0"/><circle cx="10" cy="10" r="1.4" fill="#7986a0"/><circle cx="10" cy="15.5" r="1.4" fill="#7986a0"/></svg>
+            <button class="action-edit-btn" data-id="${p.id}" title="Editar" style="background: none; border: none; padding: 0;">
+              <svg fill="none" width="20" height="20" viewBox="0 0 20 20">
+                <rect x="4" y="14.1" width="12" height="2.2" rx="1.1" fill="#bcbcbc"/>
+                <path d="M13.8 4.8a1.25 1.25 0 0 1 1.77 0l.63.63a1.25 1.25 0 0 1 0 1.77l-6.12 6.12-2.4.34.34-2.4 6.12-6.12z" stroke="#367fe4" stroke-width="1.36" fill="#e5f0ff"/>
+              </svg>
             </button>
           </td>
         </tr>
@@ -221,7 +224,7 @@ export async function render({ main }) {
               <div class="search-results-dropdown" id="searchDropdown" style="display:none;"></div>
             </div>
             <div class="drawer-actions">
-              <button type="button" class="btn-delete" id="deletePontoBtn">Excluir</button>
+              ${ponto ? `<button type="button" class="btn-delete" id="deletePontoBtn">Excluir</button>` : ''}
               <button type="submit" id="savePontoBtn" class="btn-save">Salvar</button>
             </div>
           </form>
